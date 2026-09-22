@@ -2,21 +2,16 @@
 
 **請勿輸入真實病人姓名、病歷、身分證或相片。** 此站僅供畫面與流程演示。
 
-## 網路上可以開網頁，不等於大家共用同一筆資料
+## 病人請開這個
 
-目前程式把資料存在「每一台手機自己的瀏覽器」（localStorage）。
-把網頁掛上網後：
+https://iamleonplz-lgtm.github.io/qishan-miyue-demo/
 
-- Safari 可以用 https 網址打開
-- 醫師 A 的對話不會自動出現在病人手機
-- 若有人在網頁裡輸入真實個資，那些資料仍留在那台裝置；不會傳到伺服器，但也沒有真正的多人共用與審計
+手機瀏覽器直接開即可，不必加 LINE。進入後填 Gmail、選病人或醫師。
 
-真正要讓多位醫師、多位病人在網路上看到「同一案」，必須有帳號登入、伺服器端權限、傳輸加密、暫存在台灣或具相當保護的機房、書面同意與外洩通報。病歷／醫療資訊屬個資法第 6 條特種個資。
+若上面還打不開，請先在儲存庫 Settings → Pages → Source 選 `main` / `/(root)`，等 1–2 分鐘。
 
-## 啟用 GitHub Pages（讓 Safari 打得開）
+備用預覽：https://htmlpreview.github.io/?https://github.com/iamleonplz-lgtm/qishan-miyue-demo/blob/main/index.html
 
-1. 把 `index.html` （泌約單一檔）上傳到本儲存庫根目錄
-2. Settings → Pages → Source 選 `main` / `/ (root)`
-3. 等數分鐘後網址約為：https://iamleonplz-lgtm.github.io/qishan-miyue-demo/
+## 重要
 
-公開網址只送程式，不要送真實病人資料。
+目前資料存在每一台手機自己的瀏覽器，不會自動同步到其他人。不要輸入真實病人資料。
