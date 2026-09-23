@@ -1,87 +1,151 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>泌約｜旗山泌尿科</title>
-  <style>
-    :root { --pine:#2F6B5E; --paper:#F6F3EE; --ink:#1C2421; --muted:#6B655C; --linen:#E8E2D6; --card:#FFFcf7; --warn:#8B3A2F; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif; background:var(--paper); color:var(--ink); }
-    .top { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#fffdf9; border-bottom:1px solid var(--linen); position:sticky; top:0; }
-    .brand { font-weight:700; display:flex; gap:8px; align-items:center; }
-    .mark { width:32px; height:32px; border-radius:10px; background:var(--pine); color:#fff; display:flex; align-items:center; justify-content:center; }
-    .wrap { max-width:560px; margin:0 auto; padding:28px 18px 80px; }
-    h1 { font-family:"Songti TC","PMingLiU",serif; font-size:30px; line-height:1.25; margin:0 0 10px; }
-    p { color:var(--muted); line-height:1.6; }
-    .card { background:var(--card); border:1px solid var(--linen); border-radius:16px; padding:16px; margin:14px 0; }
-    label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
-    input, select { width:100%; padding:12px; border:1px solid #C4B8A5; border-radius:10px; font:inherit; }
-    .btn { border:0; border-radius:12px; padding:12px 16px; background:var(--pine); color:#fff; font-weight:700; width:100%; margin-top:12px; cursor:pointer; }
-    .btn.ghost { background:transparent; color:var(--ink); border:1px solid #C4B8A5; }
-    .warn { background:#f6e6e3; color:var(--warn); padding:10px 12px; border-radius:12px; font-size:13px; }
-    .ok { background:#e3efe9; color:var(--pine); padding:10px 12px; border-radius:12px; font-size:13px; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>泌約｜旗山泌尿科</title>
+<style>
+:root{--pine:#2F6B5E;--paper:#F6F3EE;--ink:#1C2421;--muted:#6B655C;--linen:#E8E2D6;--card:#FFFcf7;--warn:#8B3A2F}
+*{box-sizing:border-box}
+body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
+.brand{font-weight:700;display:flex;gap:8px;align-items:center}
+.mark{width:32px;height:32px;border-radius:10px;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 72px}
+h1{font-family:"Songti TC","PMingLiU",serif;font-size:28px;line-height:1.25;margin:0 0 8px}
+p,.muted{color:var(--muted);line-height:1.55;font-size:14px}
+.card{background:var(--card);border:1px solid var(--linen);border-radius:16px;padding:14px;margin:10px 0}
+.btn{border:0;border-radius:12px;padding:11px 14px;background:var(--pine);color:#fff;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid #C4B8A5}
+.btn.block{width:100%;margin-top:8px}
+.warn{background:#f6e6e3;color:var(--warn);padding:10px 12px;border-radius:12px;font-size:13px}
+.ok{background:#e3efe9;color:var(--pine);padding:10px 12px;border-radius:12px;font-size:13px}
+.grid{display:grid;gap:8px}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #C4B8A5;border-radius:10px;font:inherit}
+.who{text-align:left;width:100%;background:#fff;border:1px solid var(--linen);border-radius:12px;padding:12px;cursor:pointer}
+.badge{display:inline-block;background:#e3efe9;color:var(--pine);border-radius:999px;padding:2px 8px;font-size:12px}
+.thread{max-height:280px;overflow:auto}
+.bubble{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:8px 10px;margin:6px 0}
+.bubble.me{background:#e3efe9}
+</style>
 </head>
 <body>
-  <div class="top">
-    <div class="brand"><div class="mark">泌</div> 泌約　旗山泌尿科</div>
-  </div>
-  <div class="wrap" id="app"></div>
-  <script>
-  var KEY = "miyue.public.v1";
-  var DOCS = [
-    { id: "d_tseng", name: "曾淑芬" },
-    { id: "d_yu", name: "尤政仁" },
-    { id: "d_huang", name: "黃冠霖" },
-    { id: "d_chang", name: "張道安" }
-  ];
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; }
-  }
-  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
-  }
-  function view() {
-    var s = load();
-    var app = document.getElementById("app");
-    if (s && s.email) {
-      app.innerHTML = '<h1>已進入泌約</h1>' +
-        '<div class="ok">' + (s.role === "doctor" ? s.clinic + "　" + s.name + " 醫師" : s.name + "（病人）") + '<br/>' + s.email + "</div>" +
-        '<div class="card"><p>這是旗山泌尿科術後／自費溝通頁。請用醫師給的邀請碼加入自己的案件。急症請打 119 或回急診，不要只在這裡留言。</p>' +
-        '<label>邀請碼</label><input id="code" placeholder="例如 HX7K-19" />' +
-        '<button class="btn" id="join">加入案件</button></div>' +
-        '<button class="btn ghost" id="out">登出</button>' +
-        '<p>請勿輸入身分證、完整病歷。</p>';
-      document.getElementById("out").onclick = function () { localStorage.removeItem(KEY); view(); };
-      document.getElementById("join").onclick = function () {
-        var c = (document.getElementById("code").value || "").trim().toUpperCase();
-        if (!c) return alert("請輸入醫師交給您的邀請碼");
-        alert("已記錄邀請碼 " + c + "。示範版資料存在這支手機瀏覽器。");
+<div class="top">
+  <div class="brand"><div class="mark">泌</div> 泌約　旗山泌尿科</div>
+  <span id="who" class="muted"></span>
+</div>
+<div class="wrap" id="app"></div>
+<script>
+var KEY="miyue.doc.v2";
+var DOCS=[
+  {id:"d_tseng",name:"曾淑芬"},
+  {id:"d_yu",name:"尤政仁"},
+  {id:"d_huang",name:"黃冠霖"},
+  {id:"d_chang",name:"張道安"}
+];
+var CASES=[
+  {id:"c1",owner:"d_tseng",patient:"陳○明",op:"HoLEP 攝護腺雷射",status:"術後追蹤",invite:"HX7K-19",msgs:[
+    {from:"doc",text:"陳先生您好，已安排兩個自費手術時段。"},
+    {from:"pat",text:"想先確認住院天數與自費項目。"}
+  ]},
+  {id:"c2",owner:"d_tseng",patient:"吳○德",op:"RIRS 軟式輸尿管鏡碎石",status:"術前準備",invite:"RIRS-04",msgs:[
+    {from:"doc",text:"軟鏡碎石前請暫停抗凝血藥，細節請在門診完成。"}
+  ]},
+  {id:"c3",owner:"d_yu",patient:"李○蓉",op:"TVT 尿失禁吊帶",status:"術前準備",invite:"TVT-22",msgs:[
+    {from:"doc",text:"術前請完成尿液檢查，報告請於門診緣交。"}
+  ]}
+];
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+function session(){return load()||{}}
+function go(h){location.hash=h||"";render()}
+function mine(uid){return CASES.filter(function(c){return c.owner===uid})}
+function render(){
+  var s=session();
+  var hash=(location.hash||"#").replace(/^#/,"");
+  var app=document.getElementById("app");
+  var who=document.getElementById("who");
+  who.textContent=s.id?(s.role==="doctor"?s.name+" 醫師":s.name):"";
+  if(!s.id){
+    app.innerHTML='<p class="warn">示範系統・請勿輸入真實病歷或身分證</p>'+
+      "<h1>醫師請直接點自己的名字進入。</h1>"+
+      "<p>不必填 Google、不必加 LINE。點下去就能看自己的示範案件。</p>"+
+      '<div class="card"><h3 style="margin:0 0 8px">旗山泌尿科醫師</h3><div class="grid">'+
+      DOCS.map(function(d){return '<button class="who" data-doc="'+d.id+'"><strong>'+d.name+' 主治醫師</strong><div class="muted">旗山泌尿科　一鍵進入工作台</div></button>'}).join("")+
+      "</div></div>"+
+      '<div class="card"><h3 style="margin:0 0 8px">病人／家屬</h3>'+
+      '<label>Google 信箱</label><input id="email" type="email" placeholder="name@gmail.com">'+
+      '<label>稱呼</label><input id="pname" placeholder="例如 陳先生">'+
+      '<button class="btn block" id="pat">用信箱進入</button></div>';
+    [].forEach.call(document.querySelectorAll("[data-doc]"),function(el){
+      el.onclick=function(){
+        var d=DOCS.filter(function(x){return x.id===el.getAttribute("data-doc")})[0];
+        save({id:d.id,role:"doctor",name:d.name,clinic:"旗山泌尿科"});
+        go("dash");
       };
+    });
+    document.getElementById("pat").onclick=function(){
+      var em=(document.getElementById("email").value||"").trim().toLowerCase();
+      var nm=(document.getElementById("pname").value||"").trim();
+      if(!em||em.indexOf("@")<1) return alert("請輸入完整信箱");
+      save({id:"p_"+em,role:"patient",name:nm||em.split("@")[0],email:em});
+      go("dash");
+    };
+    return;
+  }
+  if(hash.indexOf("case/")===0){
+    var cid=hash.split("/")[1];
+    var c=CASES.filter(function(x){return x.id===cid})[0];
+    if(!c||(s.role==="doctor"&&c.owner!==s.id)){
+      app.innerHTML='<div class="warn">沒有此案件的檢視權限。</div><button class="btn" id="back">回工作台</button>';
+      document.getElementById("back").onclick=function(){go("dash")};
       return;
     }
-    app.innerHTML = '<p class="warn">示範通道・請勿輸入真實病歷或身分證</p>' +
-      "<h1>用 Google 信箱進入，不必加 LINE。</h1>" +
-      "<p>把這個網址傳給病人即可。iPhone Safari 可直接開，不會跳到 Signing you in。</p>" +
-      '<div class="card"><label>Google 信箱</label><input id="email" type="email" inputmode="email" placeholder="name@gmail.com" />' +
-      '<label>稱呼</label><input id="name" placeholder="例如 陳先生" />' +
-      '<label>我是</label><select id="role"><option value="patient">病人／家屬</option><option value="doctor">旗山泌尿科醫師</option></select>' +
-      '<label>若是醫師，請選自己</label><select id="doc">' +
-      DOCS.map(function (d) { return '<option value="' + d.id + '">' + d.name + " 主治醫師</option>"; }).join("") +
-      '</select><button class="btn" id="go">用這組 Google 信箱進入</button></div>' +
-      '<p>同一組信箱下次可再進來。資料目前存在這支手機，不會同步到其他人的手機。</p>';
-    document.getElementById("go").onclick = function () {
-      var email = (document.getElementById("email").value || "").trim().toLowerCase();
-      var name = (document.getElementById("name").value || "").trim();
-      var role = document.getElementById("role").value;
-      var docId = document.getElementById("doc").value;
-      if (!email || email.indexOf("@") < 1) return alert("請輸入完整 Gmail，例如 name@gmail.com");
-      var doc = DOCS.filter(function (d) { return d.id === docId; })[0];
-      save({ email: email, role: role, name: role === "doctor" ? doc.name : (name || email.split("@")[0]), clinic: "旗山泌尿科", at: new Date().toISOString() });
-      view();
+    app.innerHTML='<button class="btn ghost" id="back">← 工作台</button>'+
+      "<h1>"+c.op+"</h1>"+
+      '<p>病人 '+c.patient+'　｜　'+c.status+'　｜　邀請碼 '+c.invite+"</p>"+
+      '<div class="card"><div class="thread">'+c.msgs.map(function(m){
+        return '<div class="bubble '+(m.from==="doc"?"me":"")+'">'+m.text+"</div>";
+      }).join("")+'</div><input id="msg" placeholder="回覆術後狀況（示範）">'+
+      '<button class="btn block" id="send">送出</button></div>'+
+      '<button class="btn ghost block" id="out">登出</button>';
+    document.getElementById("back").onclick=function(){go("dash")};
+    document.getElementById("out").onclick=function(){localStorage.removeItem(KEY);go("")};
+    document.getElementById("send").onclick=function(){
+      var t=(document.getElementById("msg").value||"").trim();
+      if(!t) return;
+      c.msgs.push({from:s.role==="doctor"?"doc":"pat",text:t});
+      render();
     };
+    return;
   }
-  view();
-  </script>
+  var list=s.role==="doctor"?mine(s.id):[];
+  app.innerHTML='<div class="ok">'+(s.role==="doctor"?"旗山泌尿科　"+s.name+" 醫師工作台":s.name+"（病人）")+"</div>"+
+    (s.role==="doctor"
+      ?("<h1>我的案件</h1><p>只顯示您開的案。其他醫師的病人不會出現在這裡。</p>"+(
+        list.length?list.map(function(c){
+          return '<div class="card"><div><strong>'+c.patient+'</strong> <span class="badge">'+c.status+"</span></div>"+
+            "<div>"+c.op+'</div><div class="muted">邀請碼 '+c.invite+"</div>"+
+            '<button class="btn block" data-open="'+c.id+'">打開檢視</button></div>';
+        }).join(""):'<div class="card muted">目前沒有您的示範案件。黃冠霖、張道安醫師可由此確認「進得了工作台」，案件之後再開。</div>'
+      ))
+      :'<h1>我的案件</h1><p>示範版病人端請用醫師給的邀請碼。</p><div class="card"><label>邀請碼</label><input id="code" placeholder="HX7K-19"><button class="btn block" id="join">加入</button></div>')+
+    '<button class="btn ghost block" id="out">登出</button>';
+  [].forEach.call(document.querySelectorAll("[data-open]"),function(el){
+    el.onclick=function(){go("case/"+el.getAttribute("data-open"))};
+  });
+  var join=document.getElementById("join");
+  if(join) join.onclick=function(){
+    var code=(document.getElementById("code").value||"").trim().toUpperCase();
+    var hit=CASES.filter(function(c){return c.invite===code})[0];
+    if(!hit) return alert("邀請碼無效");
+    go("case/"+hit.id);
+  };
+  document.getElementById("out").onclick=function(){localStorage.removeItem(KEY);go("")};
+}
+window.onhashchange=render;
+render();
+</script>
 </body>
 </html>
