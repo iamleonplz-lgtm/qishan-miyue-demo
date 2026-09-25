@@ -3,33 +3,34 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>泌約｜旗山泌尿科</title>
 <style>
 :root{--pine:#2F6B5E;--paper:#F6F3EE;--ink:#1C2421;--muted:#6B655C;--linen:#E8E2D6;--card:#FFFcf7;--warn:#8B3A2F}
 *{box-sizing:border-box}
-body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink)}
-.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
+body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
 .brand{font-weight:700;display:flex;gap:8px;align-items:center}
 .mark{width:32px;height:32px;border-radius:10px;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center}
-.wrap{max-width:640px;margin:0 auto;padding:20px 16px 72px}
-h1{font-family:"Songti TC","PMingLiU",serif;font-size:28px;line-height:1.25;margin:0 0 8px}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 88px}
+h1{font-family:"Songti TC","PMingLiU",serif;font-size:26px;line-height:1.25;margin:0 0 8px}
 p,.muted{color:var(--muted);line-height:1.55;font-size:14px}
 .card{background:var(--card);border:1px solid var(--linen);border-radius:16px;padding:14px;margin:10px 0}
-.btn{border:0;border-radius:12px;padding:11px 14px;background:var(--pine);color:#fff;font-weight:700;cursor:pointer}
+.btn{border:0;border-radius:12px;padding:14px 16px;background:var(--pine);color:#fff;font-weight:700;cursor:pointer;-webkit-appearance:none;appearance:none;min-height:48px;touch-action:manipulation}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid #C4B8A5}
-.btn.block{width:100%;margin-top:8px}
+.btn.block{width:100%;margin-top:8px;display:block}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .warn{background:#f6e6e3;color:var(--warn);padding:10px 12px;border-radius:12px;font-size:13px}
 .ok{background:#e3efe9;color:var(--pine);padding:10px 12px;border-radius:12px;font-size:13px}
 .grid{display:grid;gap:8px}
 label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #C4B8A5;border-radius:10px;font:inherit}
-.who{text-align:left;width:100%;background:#fff;border:1px solid var(--linen);border-radius:12px;padding:12px;cursor:pointer}
+input,select,textarea{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px;font:inherit;font-size:16px}
+.who{text-align:left;width:100%;background:#fff;border:1px solid var(--linen);border-radius:12px;padding:14px;cursor:pointer;-webkit-appearance:none}
 .badge{display:inline-block;background:#e3efe9;color:var(--pine);border-radius:999px;padding:2px 8px;font-size:12px}
 .thread{max-height:280px;overflow:auto}
 .bubble{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:8px 10px;margin:6px 0}
 .bubble.me{background:#e3efe9}
-.code{font-size:36px;letter-spacing:3px;font-weight:800;color:var(--pine);margin:8px 0 12px;text-align:center}
+.code{font-size:34px;letter-spacing:3px;font-weight:800;color:var(--pine);margin:8px 0 12px;text-align:center}
 .qr{width:220px;height:220px;background:#fff;border-radius:12px;border:1px solid var(--linen);display:block;margin:0 auto}
 </style>
 </head>
@@ -42,12 +43,8 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #C4B8A5;border-ra
 <script>
 var KEY="miyue.doc.v3";
 var BASE="https://iamleonplz-lgtm.github.io/qishan-miyue-demo/";
-var DOCS=[
-  {id:"d_tseng",name:"曾淑芬"},
-  {id:"d_yu",name:"尤政仁"},
-  {id:"d_huang",name:"黃冠霖"},
-  {id:"d_chang",name:"張道安"}
-];
+var OPS=["HoLEP 攝護腺雷射","Rezūm 水蒸汽消融","RIRS 軟式輸尿管鏡碎石","TVT 尿失禁吊帶","顯微精索靜脈結絞","其他自費手術"];
+var DOCS=[{id:"d_tseng",name:"曾淑芬"},{id:"d_yu",name:"尤政仁"},{id:"d_huang",name:"黃冠霖"},{id:"d_chang",name:"張道安"}];
 function seedCases(){
   return [
     {id:"c1",owner:"d_tseng",patient:"陳○明",op:"HoLEP 攝護腺雷射",status:"術後追蹤",invite:"HX7K-19",msgs:[{from:"doc",text:"陳先生您好，已安排兩個自費手術時段。"},{from:"pat",text:"想先確認住院天數與自費項目。"}]},
@@ -72,12 +69,30 @@ function genInvite(){
 }
 function patientLink(code){return BASE+"#invite/"+encodeURIComponent(code)}
 function qrUrl(text){return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data="+encodeURIComponent(text)}
-function copyText(t){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){alert("已複製")},function(){prompt("請手動複製",t)});
-  } else prompt("請手動複製",t);
+function toast(msg){
+  var el=document.createElement("div");
+  el.className="ok";
+  el.style.cssText="position:fixed;left:16px;right:16px;bottom:24px;z-index:50";
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },1800);
 }
-function go(h){location.hash=h||"";render()}
+function copyText(t){
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(function(){toast("已複製")},function(){showCopyBox(t)});
+  } else showCopyBox(t);
+}
+function showCopyBox(t){
+  var box=document.getElementById("copybox");
+  if(!box){ toast("請長按複製"); return; }
+  box.value=t; box.focus(); box.select();
+  try{ document.execCommand("copy"); toast("已複製"); }catch(e){ toast("請長按複製"); }
+}
+function go(h){
+  var next=h||"";
+  if((location.hash||"").replace(/^#/,"")===next){ render(); return; }
+  location.hash=next;
+}
 function findCase(id){return ST.cases.filter(function(c){return c.id===id})[0]}
 function byInvite(code){code=String(code||"").toUpperCase();return ST.cases.filter(function(c){return c.invite===code})[0]}
 function mine(uid){return ST.cases.filter(function(c){return c.owner===uid})}
@@ -93,148 +108,118 @@ function render(){
     var pending="";
     try{pending=sessionStorage.getItem("pendingInvite")||""}catch(e){}
     if(hash.indexOf("invite/")===0) pending=hash.split("/")[1];
-    app.innerHTML='<p class="warn">示範系統・請勿輸入真實病歷或身分證</p>'+
-      "<h1>醫師請直接點自己的名字進入。</h1>"+
+    app.innerHTML='<p class="warn">示範系統・請勿輸入真實病歷或身分證</p><h1>醫師請直接點自己的名字進入。</h1>'+
       '<div class="card"><h3 style="margin:0 0 8px">旗山泌尿科醫師</h3><div class="grid">'+
-      DOCS.map(function(d){return '<button class="who" data-doc="'+d.id+'"><strong>'+d.name+' 主治醫師</strong><div class="muted">一鍵進入工作台，再把邀請碼給病人</div></button>'}).join("")+
-      "</div></div>"+
-      '<div class="card"><h3 style="margin:0 0 8px">病人／家屬</h3>'+
-      '<label>Google 信箱</label><input id="email" type="email" placeholder="name@gmail.com">'+
+      DOCS.map(function(d){return '<button type="button" class="who" data-doc="'+d.id+'"><strong>'+d.name+' 主治醫師</strong><div class="muted">一鍵進入工作台</div></button>'}).join("")+
+      '</div></div><div class="card"><h3 style="margin:0 0 8px">病人／家屬</h3>'+
+      '<label>Google 信箱</label><input id="email" type="email" inputmode="email" placeholder="name@gmail.com">'+
       '<label>稱呼</label><input id="pname" placeholder="例如 陳先生">'+
-      '<label>邀請碼（醫師交給您的）</label><input id="icode" value="'+(pending||"")+'" placeholder="例如 HX7K-19">'+
-      '<button class="btn block" id="pat">進入我的案件</button></div>';
+      '<label>邀請碼</label><input id="icode" value="'+(pending||"")+'" placeholder="HX7K-19" autocapitalize="characters">'+
+      '<button type="button" class="btn block" id="pat">進入我的案件</button></div>';
     [].forEach.call(document.querySelectorAll("[data-doc]"),function(el){
       el.onclick=function(){
         var d=DOCS.filter(function(x){return x.id===el.getAttribute("data-doc")})[0];
-        ST.session={id:d.id,role:"doctor",name:d.name,clinic:"旗山泌尿科"};
-        saveAll(ST);go("dash");
+        ST.session={id:d.id,role:"doctor",name:d.name,clinic:"旗山泌尿科"}; saveAll(ST); go("dash");
       };
     });
     document.getElementById("pat").onclick=function(){
       var em=(document.getElementById("email").value||"").trim().toLowerCase();
       var nm=(document.getElementById("pname").value||"").trim();
       var code=(document.getElementById("icode").value||"").trim().toUpperCase();
-      if(!em||em.indexOf("@")<1) return alert("請輸入完整信箱");
-      ST.session={id:"p_"+em,role:"patient",name:nm||em.split("@")[0],email:em};
-      saveAll(ST);
+      if(!em||em.indexOf("@")<1) return toast("請輸入完整信箱");
+      ST.session={id:"p_"+em,role:"patient",name:nm||em.split("@")[0],email:em}; saveAll(ST);
       if(code) go("invite/"+code); else go("dash");
+    };
+    return;
+  }
+  if(hash==="new"){
+    if(s.role!=="doctor"){ go("dash"); return; }
+    app.innerHTML='<button type="button" class="btn ghost" id="back">← 工作台</button><h1>開新案並產生邀請碼</h1><p>iPhone 請在這一頁填，不要等跳出視窗。</p>'+
+      '<div class="card"><label>病人稱呼</label><input id="np" placeholder="例如 陳先生">'+
+      '<label>術式</label><select id="nop">'+OPS.map(function(o){return "<option>"+o+"</option>"}).join("")+'</select>'+
+      '<button type="button" class="btn block" id="make">產生邀請碼</button></div>';
+    document.getElementById("back").onclick=function(){go("dash")};
+    document.getElementById("make").onclick=function(){
+      var who=(document.getElementById("np").value||"").trim();
+      var op=(document.getElementById("nop").value||"").trim();
+      if(!who) return toast("請填病人稱呼");
+      var nc={id:uid(),owner:s.id,patient:who,op:op||OPS[0],status:"新開立",invite:genInvite(),msgs:[{from:"doc",text:"案件已開立，請用邀請碼加入。"}]};
+      ST.cases.push(nc); saveAll(ST); go("qr/"+nc.id);
     };
     return;
   }
   if(hash.indexOf("qr/")===0){
     var c=findCase(hash.split("/")[1]);
     if(!c||s.role!=="doctor"||c.owner!==s.id){
-      app.innerHTML='<div class="warn">只有開案醫師可以發邀請碼。</div><button class="btn" id="back">回工作台</button>';
-      document.getElementById("back").onclick=function(){go("dash")};
-      return;
+      app.innerHTML='<div class="warn">只有開案醫師可以發邀請碼。</div><button type="button" class="btn" id="back">回工作台</button>';
+      document.getElementById("back").onclick=function(){go("dash")}; return;
     }
     var link=patientLink(c.invite);
-    app.innerHTML='<button class="btn ghost" id="back">← 返回案件</button>'+
-      "<h1>給病人的邀請碼</h1>"+
-      "<p>把這一頁給病人看、列印、或複製連結。病人不必加 LINE。</p>"+
-      '<div class="card" style="text-align:center">'+
-      '<div class="muted">'+c.patient+'　｜　'+c.op+"</div>"+
-      '<div class="code">'+c.invite+"</div>"+
-      '<img class="qr" alt="QR" src="'+qrUrl(link)+'">'+
-      '<p class="muted" style="word-break:break-all;margin-top:10px">'+link+"</p>"+
-      '<div class="row" style="justify-content:center">'+
-      '<button class="btn" id="copycode">複製邀請碼</button>'+
-      '<button class="btn" id="copylink">複製病人連結</button>'+
-      '<button class="btn ghost" id="regen">重新產生</button>'+
-      "</div></div>"+
-      '<div class="card"><h3 style="margin:0 0 8px">簡訊／口頭範本</h3>'+
-      "<p>您好，這是旗山泌尿科泌約溝通頁。請用手機開啟：<br>"+link+"<br>邀請碼："+c.invite+"<br>請勿轉傳他人。</p></div>";
+    app.innerHTML='<button type="button" class="btn ghost" id="back">← 返回案件</button><h1>給病人的邀請碼</h1>'+
+      '<div class="card" style="text-align:center"><div class="muted">'+c.patient+'　｜　'+c.op+'</div><div class="code">'+c.invite+'</div>'+
+      '<img class="qr" alt="QR" src="'+qrUrl(link)+'"><label>病人連結（可長按複製）</label>'+
+      '<input id="copybox" readonly value="'+link+'">'+
+      '<button type="button" class="btn block" id="copycode">複製邀請碼</button>'+
+      '<button type="button" class="btn block" id="copylink">複製病人連結</button>'+
+      '<button type="button" class="btn ghost block" id="regen">重新產生邀請碼</button></div>';
     document.getElementById("back").onclick=function(){go("case/"+c.id)};
     document.getElementById("copycode").onclick=function(){copyText(c.invite)};
     document.getElementById("copylink").onclick=function(){copyText(link)};
     document.getElementById("regen").onclick=function(){
-      if(!confirm("舊邀請碼立刻失效，確定重產？")) return;
-      c.invite=genInvite();saveAll(ST);render();
+      var btn=document.getElementById("regen");
+      if(btn.getAttribute("data-ok")!=="1"){ btn.setAttribute("data-ok","1"); btn.textContent="再按一次確定重產（舊碼失效）"; return; }
+      c.invite=genInvite(); saveAll(ST); render();
     };
     return;
   }
   if(hash.indexOf("invite/")===0){
-    var code=hash.split("/")[1].toUpperCase();
-    var hit=byInvite(code);
-    if(!hit){
-      app.innerHTML='<div class="warn">邀請碼無效或已重產。</div><button class="btn" id="back">回工作台</button>';
-      document.getElementById("back").onclick=function(){go("dash")};
-      return;
-    }
-    if(s.role==="doctor"){
-      app.innerHTML='<div class="warn">醫師請走工作台發碼。</div><button class="btn" id="back">回工作台</button>';
-      document.getElementById("back").onclick=function(){go("dash")};
-      return;
-    }
-    go("case/"+hit.id);
-    return;
+    var ic=hash.split("/")[1].toUpperCase(); var hit=byInvite(ic);
+    if(!hit){ app.innerHTML='<div class="warn">邀請碼無效。</div><button type="button" class="btn" id="back">回工作台</button>'; document.getElementById("back").onclick=function(){go("dash")}; return; }
+    if(s.role==="doctor"){ go("dash"); return; }
+    go("case/"+hit.id); return;
   }
   if(hash.indexOf("case/")===0){
     var c2=findCase(hash.split("/")[1]);
     if(!c2||(s.role==="doctor"&&c2.owner!==s.id)){
-      app.innerHTML='<div class="warn">沒有此案件的檢視權限。</div><button class="btn" id="back">回工作台</button>';
-      document.getElementById("back").onclick=function(){go("dash")};
-      return;
+      app.innerHTML='<div class="warn">沒有此案件的檢視權限。</div><button type="button" class="btn" id="back">回工作台</button>';
+      document.getElementById("back").onclick=function(){go("dash")}; return;
     }
-    app.innerHTML='<button class="btn ghost" id="back">← 工作台</button>'+
-      "<h1>"+c2.op+"</h1>"+
-      "<p>病人 "+c2.patient+"　｜　"+c2.status+"　｜　邀請碼 "+c2.invite+"</p>"+
-      (s.role==="doctor"?'<button class="btn block" id="give">給病人邀請碼／QR</button>':"")+
-      '<div class="card"><div class="thread">'+c2.msgs.map(function(m){
-        return '<div class="bubble '+(m.from==="doc"?"me":"")+'">'+m.text+"</div>";
-      }).join("")+'</div><input id="msg" placeholder="回覆術後狀況（示範）">'+
-      '<button class="btn block" id="send">送出</button></div>'+
-      '<button class="btn ghost block" id="out">登出</button>';
+    app.innerHTML='<button type="button" class="btn ghost" id="back">← 工作台</button><h1>'+c2.op+'</h1><p>病人 '+c2.patient+'　｜　邀請碼 '+c2.invite+'</p>'+
+      (s.role==="doctor"?'<button type="button" class="btn block" id="give">給病人邀請碼／QR</button>':'')+
+      '<div class="card"><div class="thread">'+c2.msgs.map(function(m){return '<div class="bubble '+(m.from==="doc"?"me":"")+'">'+m.text+'</div>';}).join('')+
+      '</div><input id="msg" placeholder="回覆術後狀況"><button type="button" class="btn block" id="send">送出</button></div>'+
+      '<button type="button" class="btn ghost block" id="out">登出</button>';
     document.getElementById("back").onclick=function(){go("dash")};
     document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("")};
-    var give=document.getElementById("give");
-    if(give) give.onclick=function(){go("qr/"+c2.id)};
+    var give=document.getElementById("give"); if(give) give.onclick=function(){go("qr/"+c2.id)};
     document.getElementById("send").onclick=function(){
-      var t=(document.getElementById("msg").value||"").trim();
-      if(!t) return;
-      c2.msgs.push({from:s.role==="doctor"?"doc":"pat",text:t});
-      saveAll(ST);render();
+      var t=(document.getElementById("msg").value||"").trim(); if(!t) return;
+      c2.msgs.push({from:s.role==="doctor"?"doc":"pat",text:t}); saveAll(ST); render();
     };
     return;
   }
   var list=s.role==="doctor"?mine(s.id):[];
-  app.innerHTML='<div class="ok">'+(s.role==="doctor"?"旗山泌尿科　"+s.name+" 醫師工作台":s.name+"（病人）")+"</div>"+
+  app.innerHTML='<div class="ok">'+(s.role==="doctor"?"旗山泌尿科　"+s.name+" 醫師工作台":s.name+"（病人）")+'</div>'+
     (s.role==="doctor"
-      ?("<h1>我的案件</h1><p>打開案件後，用「給病人邀請碼／QR」把連結交給病人。</p>"+
-        '<button class="btn block" id="newc">新開案件並產生邀請碼</button>'+
+      ?('<h1>我的案件</h1><p>iPhone 請按下方開新案，會進入填表頁。</p><button type="button" class="btn block" id="newc">新開案件並產生邀請碼</button>'+
         (list.length?list.map(function(cx){
-          return '<div class="card"><div><strong>'+cx.patient+'</strong> <span class="badge">'+cx.status+"</span></div>"+
-            "<div>"+cx.op+'</div><div class="muted">邀請碼 '+cx.invite+"</div>"+
-            '<div class="row"><button class="btn" data-open="'+cx.id+'">打開檢視</button>'+
-            '<button class="btn ghost" data-qr="'+cx.id+'">給病人邀請碼</button></div></div>';
-        }).join(""):'<div class="card muted">尚無案件。請先按「新開案件並產生邀請碼」。</div>'))
-      :'<h1>加入案件</h1><div class="card"><label>邀請碼</label><input id="code" placeholder="HX7K-19"><button class="btn block" id="join">加入</button></div>')+
-    '<button class="btn ghost block" id="out">登出</button>';
-  [].forEach.call(document.querySelectorAll("[data-open]"),function(el){
-    el.onclick=function(){go("case/"+el.getAttribute("data-open"))};
-  });
-  [].forEach.call(document.querySelectorAll("[data-qr]"),function(el){
-    el.onclick=function(){go("qr/"+el.getAttribute("data-qr"))};
-  });
-  var neu=document.getElementById("newc");
-  if(neu) neu.onclick=function(){
-    var who=prompt("病人稱呼（請用化名，勿填身分證）","新病人");
-    if(!who) return;
-    var op=prompt("術式（可改）","HoLEP 攝護腺雷射");
-    if(!op) return;
-    var nc={id:uid(),owner:s.id,patient:who,op:op,status:"新開立",invite:genInvite(),msgs:[{from:"doc",text:"案件已開立，請用邀請碼加入。"}]};
-    ST.cases.push(nc);saveAll(ST);go("qr/"+nc.id);
-  };
+          return '<div class="card"><div><strong>'+cx.patient+'</strong> <span class="badge">'+cx.status+'</span></div><div>'+cx.op+'</div><div class="muted">邀請碼 '+cx.invite+'</div>'+
+            '<button type="button" class="btn block" data-open="'+cx.id+'">打開檢視</button>'+
+            '<button type="button" class="btn ghost block" data-qr="'+cx.id+'">給病人邀請碼</button></div>';
+        }).join(''):'<div class="card muted">尚無案件。</div>'))
+      :'<h1>加入案件</h1><div class="card"><label>邀請碼</label><input id="code" placeholder="HX7K-19" autocapitalize="characters"><button type="button" class="btn block" id="join">加入</button></div>')+
+    '<button type="button" class="btn ghost block" id="out">登出</button>';
+  [].forEach.call(document.querySelectorAll("[data-open]"),function(el){ el.onclick=function(){go("case/"+el.getAttribute("data-open"))}; });
+  [].forEach.call(document.querySelectorAll("[data-qr]"),function(el){ el.onclick=function(){go("qr/"+el.getAttribute("data-qr"))}; });
+  var neu=document.getElementById("newc"); if(neu) neu.onclick=function(){go("new")};
   var join=document.getElementById("join");
   if(join) join.onclick=function(){
     var code=(document.getElementById("code").value||"").trim().toUpperCase();
-    var hit=byInvite(code);
-    if(!hit) return alert("邀請碼無效");
-    go("case/"+hit.id);
+    var hit2=byInvite(code); if(!hit2) return toast("邀請碼無效"); go("case/"+hit2.id);
   };
   document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("")};
 }
-window.onhashchange=render;
+window.addEventListener("hashchange",render);
 render();
 </script>
 </body>
