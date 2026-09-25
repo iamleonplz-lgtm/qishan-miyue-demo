@@ -9,11 +9,11 @@
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%}
-.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
 .brand{font-weight:700;display:flex;gap:8px;align-items:center}
 .mark{width:32px;height:32px;border-radius:10px;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center}
 .wrap{max-width:640px;margin:0 auto;padding:16px 16px 120px}
-h1{font-family:"Songti TC","PMingLiU",serif;font-size:26px;line-height:1.25;margin:0 0 8px}
+h1{font-family:"Songti TC","PMingLiU",serif;font-size:26px;line-height:1.25;margin:0 0 8px;word-break:break-word}
 p,.muted{color:var(--muted);line-height:1.55;font-size:14px}
 .card{background:var(--card);border:1px solid var(--linen);border-radius:16px;padding:14px;margin:10px 0}
 .btn{border:0;border-radius:12px;padding:14px 16px;background:var(--pine);color:#fff;font-weight:700;min-height:48px;-webkit-appearance:none;touch-action:manipulation}
@@ -45,6 +45,9 @@ input,select{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px
 .dock .btn{flex:1;margin:0}
 .tabs{display:flex;gap:8px;margin:8px 0}
 .tabs .btn{flex:1;margin:0}
+#who{font-size:13px;max-width:42%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opbox{background:#e3efe9;border:1px solid var(--linen);border-radius:16px;padding:14px;margin:0 0 12px}
+.opname{font-family:"Songti TC","PMingLiU",serif;font-size:22px;line-height:1.35;font-weight:700;word-break:break-word;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -52,7 +55,7 @@ input,select{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px
 <div class="wrap" id="app"></div>
 <script>
 var KEY="miyue.doc.v3",BASE="https://iamleonplz-lgtm.github.io/qishan-miyue-demo/",MAXP=6;
-var OPS=["HoLEP 攝護腺雷射","Rezūm 水蒸氣消融","RIRS 軟式輸尿管鏡碎石","TVT 尿失禁吊帶","顯微精索靜脈結紮","其他自費手術"];
+var OPS=["HoLEP 攝護腺雷射","Rezūm 水蒸汽消融","RIRS 軟式輸尿管鏡碎石","TVT 尿失禁吊帶","顯微精索靜脈結絞","其他自費手術"];
 var DOCS=[{id:"d_tseng",name:"曾淑芬"},{id:"d_yu",name:"尤政仁"},{id:"d_huang",name:"黃冠霖"},{id:"d_chang",name:"張道安"}];
 function seedCases(){return [
 {id:"c1",owner:"d_tseng",patient:"陳○明",op:"HoLEP 攝護腺雷射",status:"術後追蹤",invite:"HX7K-19",photos:[],msgs:[{from:"doc",text:"陳先生您好，已安排兩個自費手術時段。"},{from:"pat",text:"想先確認住院天數與自費項目。"}]},
@@ -78,6 +81,9 @@ function bar(backTo){dock('<button type="button" class="btn" id="back">回上一
 function findCase(id){return ST.cases.filter(function(c){return c.id===id})[0]}
 function byInvite(code){code=String(code||"").toUpperCase();return ST.cases.filter(function(c){return c.invite===code})[0]}
 function mine(uid){return ST.cases.filter(function(c){return c.owner===uid})}
+function docName(id){var d=DOCS.filter(function(x){return x.id===id})[0];return d?d.name+" 醫師":"醫師"}
+function rememberJoin(id){if(!ST.session||ST.session.role!=="patient"||!id)return;ST.session.joined=ST.session.joined||[];if(ST.session.joined.indexOf(id)<0)ST.session.joined.push(id);saveAll(ST);}
+function joinedCases(){return ((ST.session&&ST.session.joined)||[]).map(findCase).filter(Boolean)}
 function attachPhoto(c2,file,role){if(!file)return;if(c2.photos.length>=MAXP)return toast("每案最多 "+MAXP+" 張");toast("處理照片中…");compressImage(file,function(dataUrl){c2.photos.push({id:uid(),dataUrl:dataUrl,from:role});c2.msgs.push({from:role==="doctor"?"doc":"pat",text:"（已傳照片）",photo:dataUrl});if(!saveAll(ST)){c2.photos.pop();c2.msgs.pop();toast("儲存失敗，請換較小的圖");return;}toast("已加入照片");render();});}
 function render(){
 ST=loadAll();var s=ST.session||{},hash=(location.hash||"#").replace(/^#/,""),app=document.getElementById("app");
@@ -115,13 +121,14 @@ bar("case/"+c.id);
 document.getElementById("copycode").onclick=function(){copyText(c.invite)};
 document.getElementById("copylink").onclick=function(){copyText(link)};
 return;}
-if(hash.indexOf("invite/")===0){var hit=byInvite(decodeURIComponent(hash.split("/")[1]||""));if(!hit){app.innerHTML='<div class="warn">邀請碼無效。</div>';bar("");return;}if(s.role==="doctor"){go("dash");return;}go("case/"+hit.id);return;}
+if(hash.indexOf("invite/")===0){var hit=byInvite(decodeURIComponent(hash.split("/")[1]||""));if(!hit){app.innerHTML='<div class="warn">邀請碼無效。</div>';bar("");return;}if(s.role==="doctor"){go("dash");return;}rememberJoin(hit.id);go("case/"+hit.id);return;}
 if(hash.indexOf("case/")===0){
 var c2=findCase(hash.split("/")[1]);
 if(!c2||(s.role==="doctor"&&c2.owner!==s.id)){app.innerHTML='<div class="warn">沒有此案件權限。</div>';bar("dash");return;}
 if(!c2.photos)c2.photos=[];
+if(s.role==="patient") rememberJoin(c2.id);
 var doneNow=c2.status==="已完成";
-app.innerHTML='<h1>'+c2.op+'</h1><p>病人 '+c2.patient+'　｜　<span class="badge'+(doneNow?' done':'')+'">'+c2.status+'</span>　｜　邀請碼 '+c2.invite+'</p>'+(s.role==="doctor"?'<button type="button" class="btn block" id="give">給病人邀請碼／QR</button><button type="button" class="btn ghost block" id="mark">'+(doneNow?'恢復進行中':'標為已完成')+'</button>':'')+
+app.innerHTML='<div class="opbox"><div class="muted">手術名稱</div><div class="opname">'+(c2.op||"未填手術名稱")+'</div><p style="margin:8px 0 0">'+docName(c2.owner)+'　｜　<span class="badge'+(doneNow?' done':'')+'">'+c2.status+'</span></p></div>'+(s.role==="doctor"?'<p class="muted">病人 '+c2.patient+'　｜　邀請碼 '+c2.invite+'</p><button type="button" class="btn block" id="give">給病人邀請碼／QR</button><button type="button" class="btn ghost block" id="mark">'+(doneNow?'恢復進行中':'標為已完成')+'</button>':'')+
 '<div class="card"><div class="thread">'+c2.msgs.map(function(m){return '<div class="bubble '+(m.from==="doc"?"me":"")+'">'+(m.text||"")+(m.photo?'<br><img src="'+m.photo+'" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-top:6px">':'')+'</div>';}).join("")+
 '</div><input id="msg" placeholder="描述出血、導尿管或傷口"><button type="button" class="btn block" id="send">送出文字</button></div>'+
 '<div class="card"><h3 style="margin:0 0 8px">傳送照片</h3><p class="muted">可傳傷口、尿袋、血尿顏色。請勿傳身分證或健保卡。每案最多 '+MAXP+' 張。</p><div class="photos">'+(c2.photos.map(function(ph){return '<img src="'+ph.dataUrl+'" data-big="1">';}).join("")||'<span class="muted">尚未傳圖</span>')+'</div>'+
@@ -160,14 +167,17 @@ saveAll(ST);toast("已清除完成病人");render();
 };
 }
 }else{
-app.innerHTML='<div class="ok">'+s.name+'（病人）</div><h1>加入案件</h1><div class="card"><label>邀請碼</label><input id="code" placeholder="HX7K-19" autocapitalize="characters" autocomplete="off"><button type="button" class="btn block" id="join">加入</button></div><div class="kb"></div>';
+var mineP=joinedCases();
+app.innerHTML='<div class="ok">'+s.name+'（病人）</div><h1>我的手術</h1>'+
+(mineP.length?mineP.map(function(cx){return '<div class="card"><div class="muted">手術名稱</div><div class="opname">'+(cx.op||"未填手術名稱")+'</div><p>'+docName(cx.owner)+'　｜　<span class="badge">'+cx.status+'</span></p><button type="button" class="btn block" data-open="'+cx.id+'">進入溝通</button></div>';}).join(""):'<div class="card muted">還沒有加入的手術。請用醫師給您的邀請碼加入。</div>')+
+'<div class="card"><h3 style="margin:0 0 8px">用邀請碼加入</h3><label>邀請碼</label><input id="code" placeholder="HX7K-19" autocapitalize="characters" autocomplete="off"><button type="button" class="btn block" id="join">加入</button></div><div class="kb"></div>';
 bar("");
 }
 [].forEach.call(document.querySelectorAll("[data-open]"),function(el){el.onclick=function(){go("case/"+el.getAttribute("data-open"))};});
 [].forEach.call(document.querySelectorAll("[data-qr]"),function(el){el.onclick=function(){go("qr/"+el.getAttribute("data-qr"))};});
 [].forEach.call(document.querySelectorAll("[data-done]"),function(el){el.onclick=function(){var one=findCase(el.getAttribute("data-done"));if(!one)return;one.status=one.status==="已完成"?"術後追蹤":"已完成";saveAll(ST);toast(one.status==="已完成"?"已標為完成":"已恢復進行中");render();};});
 var neu=document.getElementById("newc");if(neu)neu.onclick=function(){go("new")};
-var join=document.getElementById("join");if(join)join.onclick=function(){var code=(document.getElementById("code").value||"").trim().toUpperCase();var hit2=byInvite(code);if(!hit2)return toast("邀請碼無效");go("case/"+hit2.id);};
+var join=document.getElementById("join");if(join)join.onclick=function(){var code=(document.getElementById("code").value||"").trim().toUpperCase();var hit2=byInvite(code);if(!hit2)return toast("邀請碼無效");rememberJoin(hit2.id);go("case/"+hit2.id);};
 document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("");};
 bindLift();
 }
