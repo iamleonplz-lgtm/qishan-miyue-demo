@@ -9,10 +9,11 @@
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9;border-bottom:1px solid var(--linen);position:sticky;top:0;z-index:5}
+.stick{position:fixed;left:0;right:0;top:0;z-index:25;background:#fffdf9;border-bottom:1px solid var(--linen)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9}
 .brand{font-weight:700;display:flex;gap:8px;align-items:center}
 .mark{width:32px;height:32px;border-radius:10px;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center}
-.wrap{max-width:640px;margin:0 auto;padding:16px 16px 120px}
+.wrap{max-width:640px;margin:0 auto;padding:88px 16px 120px}
 h1{font-family:"Songti TC","PMingLiU",serif;font-size:26px;line-height:1.25;margin:0 0 8px;word-break:break-word}
 p,.muted{color:var(--muted);line-height:1.55;font-size:14px}
 .card{background:var(--card);border:1px solid var(--linen);border-radius:16px;padding:14px;margin:10px 0}
@@ -46,12 +47,18 @@ input,select{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px
 .tabs{display:flex;gap:8px;margin:8px 0}
 .tabs .btn{flex:1;margin:0}
 #who{font-size:13px;max-width:42%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.opbox{background:#e3efe9;border:1px solid var(--linen);border-radius:16px;padding:14px;margin:0 0 12px}
-.opname{font-family:"Songti TC","PMingLiU",serif;font-size:22px;line-height:1.35;font-weight:700;word-break:break-word;color:var(--ink)}
+.casebar{display:none;background:#e3efe9;padding:10px 16px 12px;border-top:1px solid var(--linen)}
+.casebar.on{display:block}
+.casebar .lbl{font-size:12px;color:var(--muted);margin:0 0 2px}
+.casebar .op{font-size:18px;line-height:1.3;font-weight:700;word-break:break-word;color:var(--ink)}
+.casebar .meta{font-size:13px;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
+<div class="stick" id="stick">
 <div class="top"><div class="brand" id="home"><div class="mark">泌</div> 泌約　旗山泌尿科</div><span id="who" class="muted"></span></div>
+<div id="casebar" class="casebar"></div>
+</div>
 <div class="wrap" id="app"></div>
 <script>
 var KEY="miyue.doc.v3",BASE="https://iamleonplz-lgtm.github.io/qishan-miyue-demo/",MAXP=6;
@@ -78,6 +85,7 @@ function compressImage(file,done){if(!file){toast("請選照片");return;}var r=
 function go(h){var n=h||"";if((location.hash||"").replace(/^#/,"")===n){render();return;}location.hash=n;}
 function dock(html){var old=document.getElementById("dock");if(old)old.remove();if(!html)return;var d=document.createElement("div");d.id="dock";d.className="dock";d.innerHTML=html;document.body.appendChild(d);}
 function bar(backTo){dock('<button type="button" class="btn" id="back">回上一層</button><button type="button" class="btn ghost" id="out">登出</button>');document.getElementById("back").onclick=function(){go(backTo)};document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("")};}
+function setCaseBar(html){var b=document.getElementById("casebar");if(!html){b.className="casebar";b.innerHTML="";}else{b.className="casebar on";b.innerHTML=html;}var h=document.getElementById("stick").offsetHeight||72;document.getElementById("app").style.paddingTop=(h+12)+"px";}
 function findCase(id){return ST.cases.filter(function(c){return c.id===id})[0]}
 function byInvite(code){code=String(code||"").toUpperCase();return ST.cases.filter(function(c){return c.invite===code})[0]}
 function mine(uid){return ST.cases.filter(function(c){return c.owner===uid})}
@@ -88,6 +96,7 @@ function attachPhoto(c2,file,role){if(!file)return;if(c2.photos.length>=MAXP)ret
 function render(){
 ST=loadAll();var s=ST.session||{},hash=(location.hash||"#").replace(/^#/,""),app=document.getElementById("app");
 dock("");
+setCaseBar("");
 document.getElementById("who").textContent=s.id?(s.role==="doctor"?s.name+" 醫師":s.name):"";
 document.getElementById("home").onclick=function(){go(s.id?"dash":"")};
 if(hash.indexOf("invite/")===0){try{sessionStorage.setItem("pendingInvite",hash.split("/")[1])}catch(e){}}
@@ -128,7 +137,8 @@ if(!c2||(s.role==="doctor"&&c2.owner!==s.id)){app.innerHTML='<div class="warn">�
 if(!c2.photos)c2.photos=[];
 if(s.role==="patient") rememberJoin(c2.id);
 var doneNow=c2.status==="已完成";
-app.innerHTML='<div class="opbox"><div class="muted">手術名稱</div><div class="opname">'+(c2.op||"未填手術名稱")+'</div><p style="margin:8px 0 0">'+docName(c2.owner)+'　｜　<span class="badge'+(doneNow?' done':'')+'">'+c2.status+'</span></p></div>'+(s.role==="doctor"?'<p class="muted">病人 '+c2.patient+'　｜　邀請碼 '+c2.invite+'</p><button type="button" class="btn block" id="give">給病人邀請碼／QR</button><button type="button" class="btn ghost block" id="mark">'+(doneNow?'恢復進行中':'標為已完成')+'</button>':'')+
+setCaseBar('<div class="lbl">手術名稱</div><div class="op">'+(c2.op||"未填手術名稱")+'</div><div class="meta">'+docName(c2.owner)+'　｜　'+c2.status+'</div>');
+app.innerHTML=(s.role==="doctor"?'<p class="muted">病人 '+c2.patient+'　｜　邀請碼 '+c2.invite+'</p><button type="button" class="btn block" id="give">給病人邀請碼／QR</button><button type="button" class="btn ghost block" id="mark">'+(doneNow?'恢復進行中':'標為已完成')+'</button>':'')+
 '<div class="card"><div class="thread">'+c2.msgs.map(function(m){return '<div class="bubble '+(m.from==="doc"?"me":"")+'">'+(m.text||"")+(m.photo?'<br><img src="'+m.photo+'" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-top:6px">':'')+'</div>';}).join("")+
 '</div><input id="msg" placeholder="描述出血、導尿管或傷口"><button type="button" class="btn block" id="send">送出文字</button></div>'+
 '<div class="card"><h3 style="margin:0 0 8px">傳送照片</h3><p class="muted">可傳傷口、尿袋、血尿顏色。請勿傳身分證或健保卡。每案最多 '+MAXP+' 張。</p><div class="photos">'+(c2.photos.map(function(ph){return '<img src="'+ph.dataUrl+'" data-big="1">';}).join("")||'<span class="muted">尚未傳圖</span>')+'</div>'+
