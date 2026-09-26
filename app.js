@@ -14,7 +14,7 @@ function genInvite(){var ch="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="",i;for(i=0;i<
 function packCase(c){var o={v:1,id:c.id,owner:c.owner,patient:c.patient,op:c.op,status:c.status,invite:c.invite};try{return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}catch(e){return ""}}
 function unpackCase(s){if(!s)return null;try{s=String(s).replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(!o||!o.id||!o.invite)return null;return {id:o.id,owner:o.owner,patient:o.patient||"",op:o.op||"",status:o.status||"新開立",invite:String(o.invite).toUpperCase(),photos:o.photos||[],msgs:o.msgs||[{from:"doc",text:"案件已開立。"}]};}catch(e){return null}}
 function importPacked(o){if(!o)return null;var exist=ST.cases.filter(function(c){return c.invite===o.invite||c.id===o.id})[0];if(exist)return exist;ST.cases.push(o);saveAll(ST);return o}
-function patientLink(c){return BASE+"?i="+encodeURIComponent(c.invite)+"&p="+packCase(c)}
+function patientLink(c){var p=packCase(c);return BASE+"?i="+encodeURIComponent(c.invite)+"&p="+p+"#invite/"+encodeURIComponent(c.invite)+"/"+p}
 function qrUrl(t){return "https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data="+encodeURIComponent(t)}
 function absorbInviteFromUrl(){var code="",pack="";try{var q=new URLSearchParams(location.search||"");code=(q.get("i")||"").toUpperCase();pack=q.get("p")||""}catch(e){}var hash=(location.hash||"").replace(/^#/,"");if(hash.indexOf("invite/")===0){var parts=hash.split("/");if(!code)code=decodeURIComponent(parts[1]||"").toUpperCase();if(!pack&&parts[2])pack=parts[2]}if(pack)importPacked(unpackCase(pack));if(code){try{sessionStorage.setItem("pendingInvite",code);if(pack)sessionStorage.setItem("pendingPack",pack)}catch(e){}}return code}
 function toast(msg){var el=document.createElement("div");el.className="ok";el.style.cssText="position:fixed;left:16px;right:16px;bottom:max(24px,env(safe-area-inset-bottom));z-index:50";el.textContent=msg;document.body.appendChild(el);setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1800);}
@@ -31,7 +31,7 @@ function findDoc(id){return DOCS.filter(function(x){return x.id===id})[0]}
 function hashPin(id,pin){var s=String(id)+"|"+String(pin)+"|"+"miyue.pin.v1",h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16);}
 function pinOf(id){ST.pins=ST.pins||{};return ST.pins[id]||""}
 function enterDoctor(d){ST.session={id:d.id,role:"doctor",name:d.name};saveAll(ST);go("dash");}
-function enterPatient(name,code){name=(name||"").trim()||"測試病人";code=(code||"").trim().toUpperCase();ST.session={id:"p_"+name+"_"+uid(),role:"patient",name:name};saveAll(ST);if(code)go("invite/"+code);else go("dash");}
+function enterPatient(name,code){name=(name||"").trim()||"測試病人";code=(code||"").trim().toUpperCase();var pack="";try{pack=sessionStorage.getItem("pendingPack")||""}catch(e){}if(pack)importPacked(unpackCase(pack));ST.session={id:"p_"+name+"_"+uid(),role:"patient",name:name};saveAll(ST);if(code)go("invite/"+code+(pack?"/"+pack:""));else go("dash");}
 function findCase(id){return ST.cases.filter(function(c){return c.id===id})[0]}
 function byInvite(code){code=String(code||"").toUpperCase();return ST.cases.filter(function(c){return c.invite===code})[0]}
 function mine(uid){return ST.cases.filter(function(c){return c.owner===uid})}
@@ -67,41 +67,21 @@ if(!d){app.innerHTML='<div class="warn">沒有這位醫師。</div>';bar("");ret
 if(s.role==="doctor"&&s.id===d.id){go("dash");return;}
 if(s.role==="doctor"&&s.id!==d.id){ST.session=null;saveAll(ST);s={};}
 var has=!!pinOf(d.id);
-app.innerHTML='<h1>'+d.name+' 醫師</h1><div class="card">'+(has?'<p>請輸入您自己設定的密碼。</p><label>密碼</label><input id="p1" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="done"><button type="button" class="btn block" id="goin">進入我的工作台</button><button type="button" class="btn ghost block" id="forget">忘記密碼（僅清本機鎖）</button>':'<p>第一次使用，請設定專屬密碼。其他人不知道密碼就進不了您的案件。</p><label>設定密碼（至少 4 碼）</label><input id="p1" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="next"><label>再輸入一次</label><input id="p2" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="done"><button type="button" class="btn block" id="setp">完成設定並進入</button>')+'</div><div class="kb"></div>';
+app.innerHTML='<h1>'+d.name+' 醫師</h1><div class="card">'+(has?'<p>請輸入您自己設定的密碼。</p><label>密碼</label><input id="p1" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="done"><button type="button" class="btn block" id="goin">進入我的工作台</button><button type="button" class="btn ghost block" id="forget">忘記密碼（僅清本機鎖）</button>':'<p>第一次使用，請設定專屬密碼。</p><label>設定密碼（至少 4 碼）</label><input id="p1" type="password" inputmode="numeric" autocomplete="off"><label>再輸入一次</label><input id="p2" type="password" inputmode="numeric" autocomplete="off"><button type="button" class="btn block" id="setp">完成設定並進入</button>')+'</div><div class="kb"></div>';
 bar("");
 document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("");};
 if(has){
-document.getElementById("goin").onclick=function(){
-var pin=(document.getElementById("p1").value||"").trim();
-if(!pin)return toast("請輸入密碼");
-if(hashPin(d.id,pin)!==pinOf(d.id))return toast("密碼不對");
-enterDoctor(d);
-};
-document.getElementById("forget").onclick=function(){
-var btn=document.getElementById("forget");
-if(btn.getAttribute("data-ok")!=="1"){btn.setAttribute("data-ok","1");btn.textContent="再按一次，清除此醫師在本機的密碼";return;}
-ST.pins=ST.pins||{};delete ST.pins[d.id];saveAll(ST);toast("已清除密碼，請重新設定");render();
-};
+document.getElementById("goin").onclick=function(){var pin=(document.getElementById("p1").value||"").trim();if(!pin)return toast("請輸入密碼");if(hashPin(d.id,pin)!==pinOf(d.id))return toast("密碼不對");enterDoctor(d);};
+document.getElementById("forget").onclick=function(){var btn=document.getElementById("forget");if(btn.getAttribute("data-ok")!=="1"){btn.setAttribute("data-ok","1");btn.textContent="再按一次，清除此醫師在本機的密碼";return;}ST.pins=ST.pins||{};delete ST.pins[d.id];saveAll(ST);toast("已清除密碼，請重新設定");render();};
 }else{
-document.getElementById("setp").onclick=function(){
-var a=(document.getElementById("p1").value||"").trim(),b=(document.getElementById("p2").value||"").trim();
-if(a.length<4)return toast("密碼至少 4 碼");
-if(a!==b)return toast("兩次密碼不一致");
-ST.pins=ST.pins||{};ST.pins[d.id]=hashPin(d.id,a);saveAll(ST);enterDoctor(d);
-};
+document.getElementById("setp").onclick=function(){var a=(document.getElementById("p1").value||"").trim(),b=(document.getElementById("p2").value||"").trim();if(a.length<4)return toast("密碼至少 4 碼");if(a!==b)return toast("兩次密碼不一致");ST.pins=ST.pins||{};ST.pins[d.id]=hashPin(d.id,a);saveAll(ST);enterDoctor(d);};
 }
 bindLift();return;}
 if(hash==="pin"){
 if(s.role!=="doctor"){go("");return;}
 app.innerHTML='<h1>變更密碼</h1><div class="card"><p>'+s.name+' 醫師專屬密碼，只存在這台手機。</p><label>目前密碼</label><input id="oldp" type="password" inputmode="numeric" autocomplete="off"><label>新密碼（至少 4 碼）</label><input id="p1" type="password" inputmode="numeric" autocomplete="off"><label>再輸入新密碼</label><input id="p2" type="password" inputmode="numeric" autocomplete="off"><button type="button" class="btn block" id="chg">儲存新密碼</button></div><div class="kb"></div>';
 bar("dash");
-document.getElementById("chg").onclick=function(){
-var oldp=(document.getElementById("oldp").value||"").trim(),a=(document.getElementById("p1").value||"").trim(),b=(document.getElementById("p2").value||"").trim();
-if(!pinOf(s.id)||hashPin(s.id,oldp)!==pinOf(s.id))return toast("目前密碼不對");
-if(a.length<4)return toast("新密碼至少 4 碼");
-if(a!==b)return toast("兩次新密碼不一致");
-ST.pins=ST.pins||{};ST.pins[s.id]=hashPin(s.id,a);saveAll(ST);toast("密碼已更新");go("dash");
-};
+document.getElementById("chg").onclick=function(){var oldp=(document.getElementById("oldp").value||"").trim(),a=(document.getElementById("p1").value||"").trim(),b=(document.getElementById("p2").value||"").trim();if(!pinOf(s.id)||hashPin(s.id,oldp)!==pinOf(s.id))return toast("目前密碼不對");if(a.length<4)return toast("新密碼至少 4 碼");if(a!==b)return toast("兩次新密碼不一致");ST.pins=ST.pins||{};ST.pins[s.id]=hashPin(s.id,a);saveAll(ST);toast("密碼已更新");go("dash");};
 bindLift();return;}
 if(hash==="new"){
 if(s.role!=="doctor"){go("dash");return;}
@@ -113,12 +93,12 @@ if(hash.indexOf("qr/")===0){
 var c=findCase(hash.split("/")[1]);
 if(!c||s.role!=="doctor"||c.owner!==s.id){app.innerHTML='<div class="warn">只有開案醫師可以發邀請碼。</div>';bar("dash");return;}
 var link=patientLink(c);
-app.innerHTML='<h1>給病人的邀請碼</h1><div class="card" style="text-align:center"><div class="muted">'+c.patient+"　"+c.op+'</div><div class="code">'+c.invite+'</div><img class="qr" alt="QR" src="'+qrUrl(link)+'"><p class="muted">請讓病人掃這個 QR，或把「完整連結」傳過去。只傳邀請碼到另一支手機會顯示無效。</p><label>病人連結</label><input id="copybox" readonly value="'+link+'"><button type="button" class="btn block" id="copycode">複製邀請碼</button><button type="button" class="btn block" id="copylink">複製完整連結</button></div>';
+app.innerHTML='<h1>給病人的邀請碼</h1><div class="card" style="text-align:center"><div class="muted">'+c.patient+"　"+c.op+'</div><div class="code">'+c.invite+'</div><img class="qr" alt="QR" src="'+qrUrl(link)+'"><p class="muted">請讓病人用相機掃這個 QR，或把「完整連結」傳過去。只傳 8 碼邀請碼到另一支手機會失敗。</p><label>病人連結</label><input id="copybox" readonly value="'+link+'"><button type="button" class="btn block" id="copycode">複製邀請碼</button><button type="button" class="btn block" id="copylink">複製完整連結</button></div>';
 bar("case/"+c.id);
 document.getElementById("copycode").onclick=function(){copyText(c.invite)};
 document.getElementById("copylink").onclick=function(){copyText(link)};
 return;}
-if(hash.indexOf("invite/")===0){var codeInv=decodeURIComponent((hash.split("/")[1]||"")).toUpperCase();var packInv="";try{packInv=sessionStorage.getItem("pendingPack")||""}catch(e){}if(hash.split("/")[2])packInv=hash.split("/")[2];var hit=byInvite(codeInv)||importPacked(unpackCase(packInv));if(!hit){app.innerHTML='<div class="warn">邀請碼無效。若案件是在另一支手機開的，請改掃醫師的 QR，或開啟完整連結。</div>';bar("");return;}if(s.role==="doctor"){go("dash");return;}rememberJoin(hit.id);go("case/"+hit.id);return;}
+if(hash.indexOf("invite/")===0){var codeInv=decodeURIComponent((hash.split("/")[1]||"")).toUpperCase();var packInv="";try{packInv=sessionStorage.getItem("pendingPack")||""}catch(e){}if(hash.split("/")[2])packInv=hash.split("/")[2];var hit=byInvite(codeInv)||importPacked(unpackCase(packInv));if(!hit){app.innerHTML='<div class="warn">這支手機還沒有這筆案件。</div><div class="card"><p>請不要只輸入 8 碼邀請碼。請用相機重新掃醫師畫面上的 QR，或把醫師「複製完整連結」貼在下面。</p><label>貼上完整連結</label><input id="fullu" placeholder="https://iamleonplz-lgtm.github.io/..."><button type="button" class="btn block" id="useu">用完整連結進入</button><button type="button" class="btn ghost block" id="demod">先看示範案件</button></div>';bar("");document.getElementById("useu").onclick=function(){var raw=(document.getElementById("fullu").value||"").trim();if(!raw)return toast("請貼上完整連結");var code="",pack="";try{var u=new URL(raw);code=(u.searchParams.get("i")||"").toUpperCase();pack=u.searchParams.get("p")||"";var h=(u.hash||"").replace(/^#/,"");if(h.indexOf("invite/")===0){var ps=h.split("/");if(!code)code=decodeURIComponent(ps[1]||"").toUpperCase();if(!pack&&ps[2])pack=ps[2]}}catch(e){}if(pack){try{sessionStorage.setItem("pendingPack",pack);sessionStorage.setItem("pendingInvite",code||"")}catch(e2){}importPacked(unpackCase(pack))}if(code)go("invite/"+code+(pack?"/"+pack:""));else toast("連結不完整，請改掃 QR");};document.getElementById("demod").onclick=function(){go("invite/HX7K-19")};return;}if(s.role==="doctor"){go("dash");return;}rememberJoin(hit.id);go("case/"+hit.id);return;}
 if(hash.indexOf("case/")===0){
 var c2=findCase(hash.split("/")[1]);
 if(!c2||(s.role==="doctor"&&c2.owner!==s.id)){app.innerHTML='<div class="warn">沒有此案件權限。</div>';bar("dash");return;}
@@ -138,8 +118,7 @@ var give=document.getElementById("give");if(give)give.onclick=function(){go("qr/
 var mark=document.getElementById("mark");if(mark)mark.onclick=function(){c2.status=c2.status==="已完成"?"術後追蹤":"已完成";saveAll(ST);toast(c2.status==="已完成"?"已標為完成":"已恢復進行中");render();};
 document.getElementById("send").onclick=function(){var t=(document.getElementById("msg").value||"").trim();if(!t)return;c2.msgs.push({from:s.role==="doctor"?"doc":"pat",text:t});saveAll(ST);render();};
 function onPick(input){input.addEventListener("change",function(){var f=input.files&&input.files[0];input.value="";if(f)attachPhoto(c2,f,s.role);});}
-onPick(document.getElementById("lib"));
-onPick(document.getElementById("cam"));
+onPick(document.getElementById("lib"));onPick(document.getElementById("cam"));
 [].forEach.call(document.querySelectorAll("[data-big]"),function(img){img.onclick=function(){document.getElementById("lbimg").src=img.src;document.getElementById("lb").className="lb on";};});
 document.getElementById("lbx").onclick=function(){document.getElementById("lb").className="lb";};
 bindLift();return;}
@@ -157,14 +136,7 @@ app.innerHTML='<div class="ok">旗山泌尿科　'+s.name+' 醫師工作台</div
 document.getElementById("tabA").onclick=function(){try{sessionStorage.setItem("miyueShow","active")}catch(e){} render();};
 document.getElementById("tabD").onclick=function(){try{sessionStorage.setItem("miyueShow","done")}catch(e){} render();};
 dock((nDone?'<button type="button" class="btn ghost" id="clearDone">清除已完成（'+nDone+'）</button>':'')+'<button type="button" class="btn ghost" id="out">登出</button>');
-if(nDone){
-document.getElementById("clearDone").onclick=function(){
-var btn=document.getElementById("clearDone");
-if(btn.getAttribute("data-ok")!=="1"){btn.setAttribute("data-ok","1");btn.textContent="再按一次，刪除已完成";return;}
-ST.cases=ST.cases.filter(function(c){return !(c.owner===s.id&&c.status==="已完成")});
-saveAll(ST);toast("已清除完成病人");render();
-};
-}
+if(nDone){document.getElementById("clearDone").onclick=function(){var btn=document.getElementById("clearDone");if(btn.getAttribute("data-ok")!=="1"){btn.setAttribute("data-ok","1");btn.textContent="再按一次，刪除已完成";return;}ST.cases=ST.cases.filter(function(c){return !(c.owner===s.id&&c.status==="已完成")});saveAll(ST);toast("已清除完成病人");render();};}
 }else{
 var mineP=joinedCases();
 app.innerHTML='<div class="ok">'+s.name+'（病人）</div><h1>我的手術</h1>'+
@@ -181,13 +153,6 @@ var join=document.getElementById("join");if(join)join.onclick=function(){var cod
 document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("");};
 bindLift();
 }
-if(window.visualViewport){
-window.visualViewport.addEventListener("resize",function(){
-var gap=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-document.body.style.paddingBottom=gap?(gap+16)+"px":"";
-var a=document.activeElement;
-if(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&a.type!=="file")liftField(a);
-});
-}
+if(window.visualViewport){window.visualViewport.addEventListener("resize",function(){var gap=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);document.body.style.paddingBottom=gap?(gap+16)+"px":"";var a=document.activeElement;if(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&a.type!=="file")liftField(a);});}
 window.addEventListener("hashchange",render);
 render();
