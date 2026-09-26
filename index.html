@@ -33,7 +33,7 @@ input,select{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px
 .bubble{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:8px 10px;margin:6px 0}
 .bubble.me{background:#e3efe9}
 .code{font-size:34px;letter-spacing:3px;font-weight:800;color:var(--pine);text-align:center}
-.qr{width:220px;height:220px;display:block;margin:0 auto;background:#fff;border-radius:12px}
+.qr{width:260px;height:260px;display:block;margin:0 auto;background:#fff;border-radius:12px}
 .photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .photos img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--linen)}
 .lb{display:none;position:fixed;inset:0;background:rgba(28,36,33,.78);z-index:40;align-items:center;justify-content:center;flex-direction:column;padding:16px}
@@ -74,8 +74,12 @@ function saveAll(st){try{localStorage.setItem(KEY,JSON.stringify(st));return tru
 var ST=loadAll();
 function uid(){return "id_"+Math.random().toString(36).slice(2,8)}
 function genInvite(){var ch="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="",i;for(i=0;i<8;i++)s+=ch.charAt(Math.floor(Math.random()*ch.length));return s.slice(0,4)+"-"+s.slice(4);}
-function patientLink(code){return BASE+"#invite/"+encodeURIComponent(code)}
-function qrUrl(t){return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data="+encodeURIComponent(t)}
+function packCase(c){var o={v:1,id:c.id,owner:c.owner,patient:c.patient,op:c.op,status:c.status,invite:c.invite};try{return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}catch(e){return ""}}
+function unpackCase(s){if(!s)return null;try{s=String(s).replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(!o||!o.id||!o.invite)return null;return {id:o.id,owner:o.owner,patient:o.patient||"",op:o.op||"",status:o.status||"新開立",invite:String(o.invite).toUpperCase(),photos:o.photos||[],msgs:o.msgs||[{from:"doc",text:"案件已開立。"}]};}catch(e){return null}}
+function importPacked(o){if(!o)return null;var exist=ST.cases.filter(function(c){return c.invite===o.invite||c.id===o.id})[0];if(exist)return exist;ST.cases.push(o);saveAll(ST);return o}
+function patientLink(c){return BASE+"?i="+encodeURIComponent(c.invite)+"&p="+packCase(c)}
+function qrUrl(t){return "https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data="+encodeURIComponent(t)}
+function absorbInviteFromUrl(){var code="",pack="";try{var q=new URLSearchParams(location.search||"");code=(q.get("i")||"").toUpperCase();pack=q.get("p")||""}catch(e){}var hash=(location.hash||"").replace(/^#/,"");if(hash.indexOf("invite/")===0){var parts=hash.split("/");if(!code)code=decodeURIComponent(parts[1]||"").toUpperCase();if(!pack&&parts[2])pack=parts[2]}if(pack)importPacked(unpackCase(pack));if(code){try{sessionStorage.setItem("pendingInvite",code);if(pack)sessionStorage.setItem("pendingPack",pack)}catch(e){}}return code}
 function toast(msg){var el=document.createElement("div");el.className="ok";el.style.cssText="position:fixed;left:16px;right:16px;bottom:max(24px,env(safe-area-inset-bottom));z-index:50";el.textContent=msg;document.body.appendChild(el);setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1800);}
 function copyText(t){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(function(){toast("已複製")},function(){showCopyBox(t)});}else showCopyBox(t);}
 function showCopyBox(t){var box=document.getElementById("copybox");if(!box){toast("請長按複製");return;}box.value=t;box.focus();box.select();try{document.execCommand("copy");toast("已複製");}catch(e){toast("請長按複製");}}
@@ -98,12 +102,12 @@ function rememberJoin(id){if(!ST.session||ST.session.role!=="patient"||!id)retur
 function joinedCases(){return ((ST.session&&ST.session.joined)||[]).map(findCase).filter(Boolean)}
 function attachPhoto(c2,file,role){if(!file)return;if(c2.photos.length>=MAXP)return toast("每案最多 "+MAXP+" 張");toast("處理照片中…");compressImage(file,function(dataUrl){c2.photos.push({id:uid(),dataUrl:dataUrl,from:role});c2.msgs.push({from:role==="doctor"?"doc":"pat",text:"（已傳照片）",photo:dataUrl});if(!saveAll(ST)){c2.photos.pop();c2.msgs.pop();toast("儲存失敗，請換較小的圖");return;}toast("已加入照片");render();});}
 function render(){
-ST=loadAll();var s=ST.session||{},hash=(location.hash||"#").replace(/^#/,""),app=document.getElementById("app");
+ST=loadAll();var incoming=absorbInviteFromUrl();var s=ST.session||{},hash=(location.hash||"#").replace(/^#/,""),app=document.getElementById("app");
 dock("");
 setCaseBar("");
 document.getElementById("who").textContent=s.id?(s.role==="doctor"?s.name+" 醫師":s.name):"";
 document.getElementById("home").onclick=function(){go(s.id?"dash":"")};
-if(hash.indexOf("invite/")===0){try{sessionStorage.setItem("pendingInvite",hash.split("/")[1])}catch(e){}}
+if(incoming&&s.role==="patient"&&hash.indexOf("case/")!==0&&hash.indexOf("invite/")!==0){var auto=byInvite(incoming);if(auto){rememberJoin(auto.id);go("case/"+auto.id);return;}}
 if(!s.id && hash.indexOf("doc/")!==0){
 var pending="";try{pending=sessionStorage.getItem("pendingInvite")||""}catch(e){}
 if(hash.indexOf("invite/")===0) pending=decodeURIComponent(hash.split("/")[1]||"");
@@ -170,13 +174,13 @@ bindLift();return;}
 if(hash.indexOf("qr/")===0){
 var c=findCase(hash.split("/")[1]);
 if(!c||s.role!=="doctor"||c.owner!==s.id){app.innerHTML='<div class="warn">只有開案醫師可以發邀請碼。</div>';bar("dash");return;}
-var link=patientLink(c.invite);
-app.innerHTML='<h1>給病人的邀請碼</h1><div class="card" style="text-align:center"><div class="muted">'+c.patient+"　"+c.op+'</div><div class="code">'+c.invite+'</div><img class="qr" alt="QR" src="'+qrUrl(link)+'"><label>病人連結</label><input id="copybox" readonly value="'+link+'"><button type="button" class="btn block" id="copycode">複製邀請碼</button><button type="button" class="btn block" id="copylink">複製連結</button></div>';
+var link=patientLink(c);
+app.innerHTML='<h1>給病人的邀請碼</h1><div class="card" style="text-align:center"><div class="muted">'+c.patient+"　"+c.op+'</div><div class="code">'+c.invite+'</div><img class="qr" alt="QR" src="'+qrUrl(link)+'"><p class="muted">請讓病人掃這個 QR，或把「完整連結」傳過去。只傳邀請碼到另一支手機會顯示無效。</p><label>病人連結</label><input id="copybox" readonly value="'+link+'"><button type="button" class="btn block" id="copycode">複製邀請碼</button><button type="button" class="btn block" id="copylink">複製完整連結</button></div>';
 bar("case/"+c.id);
 document.getElementById("copycode").onclick=function(){copyText(c.invite)};
 document.getElementById("copylink").onclick=function(){copyText(link)};
 return;}
-if(hash.indexOf("invite/")===0){var hit=byInvite(decodeURIComponent(hash.split("/")[1]||""));if(!hit){app.innerHTML='<div class="warn">邀請碼無效。</div>';bar("");return;}if(s.role==="doctor"){go("dash");return;}rememberJoin(hit.id);go("case/"+hit.id);return;}
+if(hash.indexOf("invite/")===0){var codeInv=decodeURIComponent((hash.split("/")[1]||"")).toUpperCase();var packInv="";try{packInv=sessionStorage.getItem("pendingPack")||""}catch(e){}if(hash.split("/")[2])packInv=hash.split("/")[2];var hit=byInvite(codeInv)||importPacked(unpackCase(packInv));if(!hit){app.innerHTML='<div class="warn">邀請碼無效。若案件是在另一支手機開的，請改掃醫師的 QR，或開啟完整連結。</div>';bar("");return;}if(s.role==="doctor"){go("dash");return;}rememberJoin(hit.id);go("case/"+hit.id);return;}
 if(hash.indexOf("case/")===0){
 var c2=findCase(hash.split("/")[1]);
 if(!c2||(s.role==="doctor"&&c2.owner!==s.id)){app.innerHTML='<div class="warn">沒有此案件權限。</div>';bar("dash");return;}
@@ -235,7 +239,7 @@ bar("");
 [].forEach.call(document.querySelectorAll("[data-done]"),function(el){el.onclick=function(){var one=findCase(el.getAttribute("data-done"));if(!one)return;one.status=one.status==="已完成"?"術後追蹤":"已完成";saveAll(ST);toast(one.status==="已完成"?"已標為完成":"已恢復進行中");render();};});
 var neu=document.getElementById("newc");if(neu)neu.onclick=function(){go("new")};
 var chpin=document.getElementById("chpin");if(chpin)chpin.onclick=function(){go("pin")};
-var join=document.getElementById("join");if(join)join.onclick=function(){var code=(document.getElementById("code").value||"").trim().toUpperCase();var hit2=byInvite(code);if(!hit2)return toast("邀請碼無效");rememberJoin(hit2.id);go("case/"+hit2.id);};
+var join=document.getElementById("join");if(join)join.onclick=function(){var code=(document.getElementById("code").value||"").trim().toUpperCase();var packInv="";try{packInv=sessionStorage.getItem("pendingPack")||""}catch(e){}var hit2=byInvite(code)||importPacked(unpackCase(packInv));if(!hit2)return toast("這支手機找不到此邀請碼，請改掃 QR 或貼上完整連結");rememberJoin(hit2.id);go("case/"+hit2.id);};
 document.getElementById("out").onclick=function(){ST.session=null;saveAll(ST);go("");};
 bindLift();
 }
