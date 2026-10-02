@@ -57,7 +57,7 @@ textarea{min-height:88px;resize:vertical}
 .toast{position:fixed;left:16px;right:16px;bottom:max(24px,env(safe-area-inset-bottom));z-index:50;background:#e3efe9;color:var(--pine);padding:10px 12px;border-radius:12px}
 .emer a{color:var(--warn);font-weight:700}
 .emer-actions{display:flex;gap:8px;margin-top:10px}
-.emer-actions .btn{flex:1}
+.emer-actions .btn{flex:1;color:#fff}
 .sos{position:fixed;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:28;background:var(--warn);color:#fff;border:0;border-radius:999px;padding:12px 14px;font-weight:700;min-height:48px}
 body.role-doctor .sos{display:none}
 .opname{font-size:18px;font-weight:700;line-height:1.35}
