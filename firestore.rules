@@ -1,0 +1,184 @@
+rules_version = '2';
+// 泌約｜旗山泌尿科
+// 部署：Firebase console → Firestore → 規則 → 貼上後發布。
+// 醫師白名單 doctors/{uid} 只能在 console 寫入，客戶端不能自行註冊。
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isDoctor() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/doctors/$(request.auth.uid))
+        && get(/databases/$(database)/documents/doctors/$(request.auth.uid)).data.active == true;
+    }
+    function casePath(caseId) {
+      return /databases/$(database)/documents/cases/$(caseId);
+    }
+    function isOwner(caseId) {
+      return isDoctor()
+        && exists(casePath(caseId))
+        && get(casePath(caseId)).data.ownerUid == request.auth.uid;
+    }
+    function isMember(caseId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/cases/$(caseId)/members/$(request.auth.uid));
+    }
+    function sensitive(a) {
+      return a.matches('.*[A-Za-z][12][0-9]{8}.*')
+        || a.matches('.*09[0-9]{8}.*')
+        || a.matches('.*[0-9]{8,}.*');
+    }
+    function validAlias(a) {
+      return a is string && a.size() >= 1 && a.size() <= 10 && !sensitive(a);
+    }
+    function validOp(code) {
+      return code in ['circumcision', 'vasectomy', 'steam', 'other'];
+    }
+    function validStatus(s) {
+      return s in ['new', 'preop', 'postop', 'closed'];
+    }
+    function inviteOk(token, caseId) {
+      return token is string
+        && exists(/databases/$(database)/documents/invites/$(token))
+        && get(/databases/$(database)/documents/invites/$(token)).data.caseId == caseId
+        && get(/databases/$(database)/documents/invites/$(token)).data.revoked == false
+        && get(/databases/$(database)/documents/invites/$(token)).data.expiresAt > request.time
+        && (
+          get(/databases/$(database)/documents/invites/$(token)).data.oneTime != true
+          || get(/databases/$(database)/documents/invites/$(token)).data.used != true
+          || get(/databases/$(database)/documents/invites/$(token)).data.usedBy == request.auth.uid
+        );
+    }
+
+    match /doctors/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    match /invites/{token} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if isDoctor()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.caseId is string
+        && request.resource.data.caseId.size() > 5
+        && request.resource.data.revoked == false
+        && request.resource.data.used == false
+        && request.resource.data.oneTime is bool
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly(['caseId', 'ownerUid', 'expiresAt', 'revoked', 'used', 'oneTime', 'createdAt']);
+      allow update: if signedIn() && (
+        (isDoctor()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.caseId == resource.data.caseId
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['revoked', 'used', 'expiresAt', 'oneTime']))
+        || (resource.data.used == false
+          && resource.data.oneTime == true
+          && resource.data.revoked == false
+          && resource.data.expiresAt > request.time
+          && request.resource.data.used == true
+          && request.resource.data.usedBy == request.auth.uid
+          && exists(/databases/$(database)/documents/cases/$(resource.data.caseId)/members/$(request.auth.uid))
+          && request.resource.data.caseId == resource.data.caseId
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.revoked == false
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedBy', 'usedAt']))
+      );
+      allow delete: if false;
+    }
+
+    match /cases/{caseId} {
+      allow get: if isOwner(caseId) || isMember(caseId);
+      allow list: if isDoctor() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isDoctor()
+        && request.resource.data.ownerUid == request.auth.uid
+        && validAlias(request.resource.data.alias)
+        && validOp(request.resource.data.opCode)
+        && request.resource.data.status == 'new'
+        && request.resource.data.prevStatus == 'new'
+        && request.resource.data.archived == false
+        && request.resource.data.hasMember == false
+        && request.resource.data.ownerName is string
+        && request.resource.data.ownerName.size() > 0
+        && request.resource.data.ownerName.size() <= 20
+        && request.resource.data.activeInvite is string
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.keys().hasOnly([
+          'ownerUid', 'ownerName', 'opCode', 'status', 'prevStatus', 'alias',
+          'createdAt', 'updatedAt', 'archived', 'hasMember', 'activeInvite'
+        ]);
+      allow update: if (
+        (isOwner(caseId)
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.ownerName == resource.data.ownerName
+          && validAlias(request.resource.data.alias)
+          && validOp(request.resource.data.opCode)
+          && validStatus(request.resource.data.status)
+          && request.resource.data.archived is bool
+          && request.resource.data.hasMember is bool
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'opCode', 'status', 'prevStatus', 'alias', 'updatedAt', 'archived', 'hasMember', 'activeInvite', 'lastPatientMsgAt'
+          ]))
+        || (isMember(caseId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hasMember'])
+          && request.resource.data.hasMember == true)
+        || (isMember(caseId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastPatientMsgAt'])
+          && request.resource.data.lastPatientMsgAt == request.time)
+      );
+      allow delete: if false;
+
+      match /members/{uid} {
+        allow get: if isOwner(caseId) || (signedIn() && request.auth.uid == uid);
+        allow list: if isOwner(caseId);
+        allow create: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && validAlias(request.resource.data.alias)
+          && inviteOk(request.resource.data.token, caseId)
+          && request.resource.data.joinedAt == request.time
+          && request.resource.data.keys().hasOnly(['uid', 'token', 'alias', 'joinedAt']);
+        allow update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.token == resource.data.token
+          && request.resource.data.alias == resource.data.alias
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['noticeAckAt'])
+          && request.resource.data.noticeAckAt == request.time;
+        allow delete: if false;
+      }
+
+      match /messages/{msgId} {
+        allow get, list: if isOwner(caseId) || isMember(caseId);
+        allow create: if signedIn()
+          && (isOwner(caseId) || isMember(caseId))
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.fromRole in ['doc', 'pat']
+          && ((request.resource.data.fromRole == 'doc' && isOwner(caseId))
+            || (request.resource.data.fromRole == 'pat' && isMember(caseId)))
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.keys().hasOnly(['fromRole', 'fromUid', 'text', 'createdAt']);
+        allow update, delete: if false;
+      }
+    }
+
+    match /patientIndex/{uid}/items/{caseId} {
+      allow get, list: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.caseId == caseId
+        && inviteOk(request.resource.data.token, caseId)
+        && request.resource.data.joinedAt == request.time
+        && request.resource.data.keys().hasOnly(['caseId', 'token', 'joinedAt']);
+      allow update, delete: if false;
+    }
+  }
+}

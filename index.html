@@ -3,63 +3,75 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
+<meta name="robots" content="noindex,nofollow"/>
 <title>泌約｜旗山泌尿科</title>
-<style>
-:root{--pine:#2F6B5E;--paper:#F6F3EE;--ink:#1C2421;--muted:#6B655C;--linen:#E8E2D6;--card:#FFFcf7;--warn:#8B3A2F}
-*{box-sizing:border-box}
-html,body{min-height:100%}
-body{margin:0;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%}
-.stick{position:fixed;left:0;right:0;top:0;z-index:25;background:#fffdf9;border-bottom:1px solid var(--linen)}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#fffdf9}
-.brand{font-weight:700;display:flex;gap:8px;align-items:center}
-.mark{width:32px;height:32px;border-radius:10px;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center}
-.wrap{max-width:640px;margin:0 auto;padding:88px 16px 120px}
-h1{font-family:"Songti TC","PMingLiU",serif;font-size:26px;line-height:1.25;margin:0 0 8px;word-break:break-word}
-p,.muted{color:var(--muted);line-height:1.55;font-size:14px}
-.card{background:var(--card);border:1px solid var(--linen);border-radius:16px;padding:14px;margin:10px 0}
-.btn{border:0;border-radius:12px;padding:14px 16px;background:var(--pine);color:#fff;font-weight:700;min-height:48px;-webkit-appearance:none;touch-action:manipulation}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid #C4B8A5}
-.btn.block{width:100%;margin-top:8px;display:block;text-align:center}
-.warn{background:#f6e6e3;color:var(--warn);padding:10px 12px;border-radius:12px;font-size:13px}
-.ok{background:#e3efe9;color:var(--pine);padding:10px 12px;border-radius:12px;font-size:13px}
-.grid{display:grid;gap:8px}
-label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
-input,select{width:100%;padding:14px;border:1px solid #C4B8A5;border-radius:10px;font:inherit;font-size:16px;scroll-margin-top:96px;scroll-margin-bottom:46vh}
-.who{text-align:left;width:100%;background:#fff;border:1px solid var(--linen);border-radius:12px;padding:14px;-webkit-appearance:none}
-.badge{display:inline-block;background:#e3efe9;color:var(--pine);border-radius:999px;padding:2px 8px;font-size:12px}
-.badge.done{background:#eee;color:#6B655C}
-.card.done{opacity:.75}
-.thread{max-height:260px;overflow:auto}
-.bubble{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:8px 10px;margin:6px 0}
-.bubble.me{background:#e3efe9}
-.code{font-size:34px;letter-spacing:3px;font-weight:800;color:var(--pine);text-align:center}
-.qr{width:260px;height:260px;display:block;margin:0 auto;background:#fff;border-radius:12px}
-.photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.photos img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--linen)}
-.lb{display:none;position:fixed;inset:0;background:rgba(28,36,33,.78);z-index:40;align-items:center;justify-content:center;flex-direction:column;padding:16px}
-.lb.on{display:flex}
-.lb img{max-width:96%;max-height:78vh;border-radius:12px}
-.filebtn{position:relative;overflow:hidden}
-.filebtn input{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;font-size:32px;padding:0;border:0;margin:0}
-.kb{height:40vh}
-.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fffdf9;border-top:1px solid var(--linen);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;gap:8px}
-.dock .btn{flex:1;margin:0}
-.tabs{display:flex;gap:8px;margin:8px 0}
-.tabs .btn{flex:1;margin:0}
-#who{font-size:13px;max-width:42%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.casebar{display:none;background:#e3efe9;padding:10px 16px 12px;border-top:1px solid var(--linen)}
-.casebar.on{display:block}
-.casebar .lbl{font-size:12px;color:var(--muted);margin:0 0 2px}
-.casebar .op{font-size:18px;line-height:1.3;font-weight:700;word-break:break-word;color:var(--ink)}
-.casebar .meta{font-size:13px;color:var(--muted);margin-top:4px}
-</style>
+<link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-<div class="stick" id="stick">
-<div class="top"><div class="brand" id="home"><div class="mark">泌</div> 泌約　旗山泌尿科</div><span id="who" class="muted"></span></div>
-<div id="casebar" class="casebar"></div>
+<header class="stick" id="stick">
+<div class="top">
+<button type="button" class="brand" id="home"><span class="mark" aria-hidden="true">泌</span> 泌約　旗山泌尿科</button>
+<span id="who" class="muted"></span>
 </div>
-<div class="wrap" id="app"></div>
-<script src="app.js"></script>
+<div id="casebar" class="casebar"></div>
+</header>
+<main id="app" class="wrap"></main>
+<button type="button" class="sos" id="sos">我有緊急狀況</button>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="emergency" class="lb" role="dialog" aria-modal="true" aria-labelledby="emer-title">
+<div class="panel">
+<div class="warn emer" id="emer-body">
+<strong id="emer-title">【緊急狀況　請不要等 APP 回覆】</strong><br>
+出現以下任一情形，請直接到急診，或打 <a href="tel:119">119</a>，或旗山醫院總機 <a href="tel:076613811">07-6613811</a> 轉急診：<br>
+・大量血尿或有血塊<br>
+・尿不出來，或尿管不通<br>
+・發燒或寒顫<br>
+・劇烈腰痛或腹痛<br>
+・傷口大量滲血<br>
+・意識不清或喘<br>
+APP 訊息不保證即時有人回覆，也不能取代看診。緊急時不要等 APP 回覆。<br>
+本提示不是診斷，也不是治療建議。
+<div class="emer-actions">
+<a class="btn" href="tel:119">打 119</a>
+<a class="btn" href="tel:076613811">打總機 07-6613811</a>
+</div>
+</div>
+<button type="button" class="btn block" id="ackok" hidden>我了解</button>
+<button type="button" class="btn block" id="stillSend" hidden>仍要送出留言</button>
+<button type="button" class="btn ghost block" id="emerClose">關閉</button>
+</div>
+</div>
+<div id="lightbox" class="lb" role="dialog" aria-modal="true" aria-label="照片">
+<img id="lbimg" alt="">
+<button type="button" class="btn ghost" id="lbx">關閉</button>
+</div>
+<noscript>
+<div class="warn emer">
+<strong>【緊急狀況　請不要等 APP 回覆】</strong><br>
+出現以下任一情形，請直接到急診，或打 <a href="tel:119">119</a>，或旗山醫院總機 <a href="tel:076613811">07-6613811</a> 轉急診：<br>
+・大量血尿或有血塊<br>
+・尿不出來，或尿管不通<br>
+・發燒或寒顫<br>
+・劇烈腰痛或腹痛<br>
+・傷口大量滲血<br>
+・意識不清或喘<br>
+APP 訊息不保證即時有人回覆，也不能取代看診。緊急時不要等 APP 回覆。<br>
+本提示不是診斷，也不是治療建議。
+</div>
+</noscript>
+<script>
+document.getElementById("sos").addEventListener("click", function () {
+  var box = document.getElementById("emergency");
+  box.className = "lb on";
+  box.removeAttribute("hidden");
+});
+document.getElementById("emerClose").addEventListener("click", function () {
+  var box = document.getElementById("emergency");
+  box.className = "lb";
+  document.getElementById("stillSend").hidden = true;
+});
+</script>
+<script src="qrcode.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
